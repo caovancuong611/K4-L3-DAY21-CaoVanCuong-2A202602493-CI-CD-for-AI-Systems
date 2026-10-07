@@ -1,93 +1,94 @@
-import os
 import json
+
 import numpy as np
 import pandas as pd
-from src.train import train
+from src.train import check_label_drift, find_best_threshold, train
 
 
 FEATURE_NAMES = [
-    "age", "workclass", "education_num", "marital_status", "occupation",
-    "relationship", "sex", "capital_gain", "capital_loss", "hours_per_week",
+    "age",
+    "workclass",
+    "education_num",
+    "marital_status",
+    "occupation",
+    "relationship",
+    "sex",
+    "capital_gain",
+    "capital_loss",
+    "hours_per_week",
 ]
 
 
 def _make_temp_data(tmp_path):
-    """
-    Tao dataset nho voi cung schema Adult de su dung trong test.
-
-    pytest cung cap `tmp_path` la mot thu muc tam thoi, tu dong xoa sau khi test ket thuc.
-    Ham nay dung du lieu ngau nhien nen khong can ket noi cloud storage hay tai file CSV thuc.
-    """
     rng = np.random.default_rng(0)
     n = 200
+    features = rng.random((n, len(FEATURE_NAMES)))
+    target = rng.integers(0, 2, size=n)
+    data = pd.DataFrame(features, columns=FEATURE_NAMES)
+    data["target"] = target
 
-    # TODO 1: Tao mang X co kich thuoc (n, len(FEATURE_NAMES)) voi gia tri [0, 1)
-    # X = rng.random((n, len(FEATURE_NAMES)))
-
-    # TODO 2: Tao mang y gom n phan tu nguyen ngau nhien trong [0, 2)
-    # Chu y: bai toan nay chi co HAI lop (0 va 1), nen can tren la 2.
-    # y = rng.integers(0, 2, size=n)
-
-    # TODO 3: Xay dung DataFrame, them cot "target"
-    # df = pd.DataFrame(X, columns=FEATURE_NAMES)
-    # df["target"] = y
-
-    # TODO 4: Luu 160 dong dau lam tap huan luyen, 40 dong cuoi lam tap holdout
-    # train_path = str(tmp_path / "train.csv")
-    # eval_path  = str(tmp_path / "holdout.csv")
-    # df.iloc[:160].to_csv(train_path, index=False)
-    # df.iloc[160:].to_csv(eval_path,  index=False)
-
-    # TODO 5: Tra ve (train_path, eval_path)
-    # return train_path, eval_path
-
-    pass  # xoa dong nay sau khi hoan thanh tat ca TODO ben tren
+    train_path = tmp_path / "train.csv"
+    eval_path = tmp_path / "holdout.csv"
+    data.iloc[:160].to_csv(train_path, index=False)
+    data.iloc[160:].to_csv(eval_path, index=False)
+    return train_path, eval_path
 
 
-def test_train_returns_float(tmp_path):
-    """Kiem tra ham train() tra ve mot so thuc nam trong [0.0, 1.0]."""
+def _train_in_tmp_path(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
     train_path, eval_path = _make_temp_data(tmp_path)
-
-    # TODO 6: Goi ham train() voi sieu tham so nho
-    # (n_estimators=10, learning_rate=0.1, max_depth=2) va cac duong dan file vua tao
-    # f1 = train({"n_estimators": 10, "learning_rate": 0.1, "max_depth": 2}, ...)
-
-    # TODO 7: Kiem tra ket qua
-    # assert isinstance(f1, float)
-    # assert 0.0 <= f1 <= 1.0
-
-    pass  # xoa dong nay sau khi hoan thanh tat ca TODO ben tren
-
-
-def test_report_file_created(tmp_path):
-    """Kiem tra file outputs/report.json duoc tao sau khi huan luyen."""
-    train_path, eval_path = _make_temp_data(tmp_path)
-    train(
+    return train(
         {"n_estimators": 10, "learning_rate": 0.1, "max_depth": 2},
-        data_path=train_path,
-        eval_path=eval_path,
+        data_path=str(train_path),
+        eval_path=str(eval_path),
     )
 
-    # TODO 8: Kiem tra file ton tai va noi dung dung dinh dang
-    # assert os.path.exists("outputs/report.json")
-    # with open("outputs/report.json") as f:
-    #     report = json.load(f)
-    # assert "f1_score" in report
-    # assert "accuracy" in report
 
-    pass  # xoa dong nay sau khi hoan thanh tat ca TODO ben tren
+def test_train_returns_float(tmp_path, monkeypatch):
+    f1 = _train_in_tmp_path(tmp_path, monkeypatch)
+    assert isinstance(f1, float)
+    assert 0.0 <= f1 <= 1.0
 
 
-def test_model_file_created(tmp_path):
-    """Kiem tra file models/model.joblib duoc tao sau khi huan luyen."""
-    train_path, eval_path = _make_temp_data(tmp_path)
-    train(
-        {"n_estimators": 10, "learning_rate": 0.1, "max_depth": 2},
-        data_path=train_path,
-        eval_path=eval_path,
-    )
+def test_report_file_created(tmp_path, monkeypatch):
+    _train_in_tmp_path(tmp_path, monkeypatch)
 
-    # TODO 9: Kiem tra file model ton tai
-    # assert os.path.exists("models/model.joblib")
+    report_path = tmp_path / "outputs" / "report.json"
+    assert report_path.is_file()
+    report = json.loads(report_path.read_text(encoding="utf-8"))
+    assert set(report) == {
+        "f1_score",
+        "accuracy",
+        "best_threshold",
+        "best_threshold_f1",
+        "train_positive_rate",
+    }
+    assert all(0.0 <= value <= 1.0 for value in report.values())
+    # Quet nguong co ca 0.5 nen F1 tot nhat khong the thap hon F1 mac dinh
+    assert report["best_threshold_f1"] >= report["f1_score"]
 
-    pass  # xoa dong nay sau khi hoan thanh tat ca TODO ben tren
+
+def test_detail_report_created(tmp_path, monkeypatch):
+    _train_in_tmp_path(tmp_path, monkeypatch)
+
+    detail = (tmp_path / "outputs" / "detail.txt").read_text(encoding="utf-8")
+    assert "Confusion matrix" in detail
+    assert "precision" in detail and "recall" in detail
+
+
+def test_best_threshold_beats_or_matches_default():
+    y_true = pd.Series([0, 0, 0, 1, 1])
+    probabilities = np.array([0.1, 0.2, 0.35, 0.4, 0.9])
+    threshold, best_f1 = find_best_threshold(y_true, probabilities)
+    assert threshold == 0.4
+    assert best_f1 == 1.0
+
+
+def test_check_label_drift_warns_when_rate_is_far_from_reference(capsys):
+    assert check_label_drift(pd.Series([1, 1, 0, 0])) == 0.5
+    assert "DATA DRIFT" in capsys.readouterr().out
+
+
+def test_model_file_created(tmp_path, monkeypatch):
+    _train_in_tmp_path(tmp_path, monkeypatch)
+    assert (tmp_path / "models" / "model.joblib").is_file()

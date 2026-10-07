@@ -56,8 +56,9 @@ trình khi một ảnh nào đó chưa thể hiện đủ (ví dụ quality gate
   đường dẫn bucket. Được phép che email cá nhân và khóa bí mật.
 - **Cần chụp cả URL trên thanh địa chỉ** với các ảnh chụp từ trình duyệt (MLflow UI,
   GitHub Actions, Cloud Storage Console) để xác nhận đúng repo/project của bạn.
-- **Tuyệt đối không commit khóa bí mật**: `sa-key.json`, nội dung GitHub Secrets, access
-  key của cloud. Nếu ảnh lỡ chứa các thông tin này, hãy che lại trước khi commit.
+- **Tuyệt đối không commit khóa bí mật**: AWS access key, private SSH key, nội dung
+  GitHub Secrets hay thông tin thanh toán. Nếu ảnh lỡ chứa các thông tin này, hãy che lại
+  trước khi commit.
 
 ---
 

@@ -85,9 +85,9 @@ data: bổ sung 22361 mẫu dữ liệu mới (train_batch2)
 Theo dõi từng job:
 
 1. **Unit Test** - unit tests chạy trên code hiện tại (không thay đổi so với Bước 2).
-2. **Train** - CI runner pull tập dữ liệu mới (44.722 mẫu) từ cloud storage, huấn luyện lại mô hình, upload `model.joblib` mới lên cloud storage.
+2. **Train** - CI runner pull tập dữ liệu mới (44.722 mẫu) từ S3 và huấn luyện lại mô hình. Model candidate được tải lên S3 nhưng chưa thay model đang phục vụ.
 3. **Quality Gate** - kiểm tra `f1_score >= 0.65`, nếu không đạt thì pipeline dừng tại đây.
-4. **Release** - nếu quality gate qua, service trên VM được restart với mô hình mới.
+4. **Release** - nếu quality gate qua, model candidate được promote thành `artifacts/current/model.joblib` và service trên EC2 được restart.
 
 ---
 
@@ -153,9 +153,12 @@ Nếu thấy `data/train_batch1.csv`, bạn đã commit nhầm file. Thêm file 
 Không có vấn đề. Các cloud provider đều hỗ trợ file có kích thước lớn trong gói miễn phí/trial. Kiểm tra lại xác thực:
 
 ```bash
-export GOOGLE_APPLICATION_CREDENTIALS=sa-key.json
+aws sts get-caller-identity
+dvc remote list
 dvc push
 ```
+
+Đảm bảo AWS CLI đang dùng IAM identity có quyền ghi vào prefix DVC của bucket lab.
 
 **f1_score ở Bước 3 thấp hơn Bước 2**
 

@@ -73,9 +73,9 @@ Nếu hai lệnh chạy ở hai thời điểm khác nhau, được phép nộp 
 
 ---
 
-## `05-cloud-storage.png` - Cloud Storage Console
+## `05-cloud-storage.png` - Amazon S3 Console
 
-Chụp giao diện web của cloud storage (GCS / S3 / Azure Blob).
+Chụp giao diện web Amazon S3.
 
 Ảnh phải thấy rõ:
 
