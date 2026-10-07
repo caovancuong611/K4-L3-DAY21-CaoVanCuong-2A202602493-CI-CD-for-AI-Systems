@@ -6,7 +6,7 @@
 | MSSV | 2A202602493 |
 | Lớp / Khóa | K4 |
 | Repo GitHub | https://github.com/caovancuong611/K4-L3-DAY21-CaoVanCuong-2A202602493-CI-CD-for-AI-Systems |
-| Ngày nộp | ___ |
+| Ngày nộp | 08/10/2026 |
 
 ---
 
@@ -58,10 +58,15 @@ mất tác dụng chặn mô hình kém.
 
 | | f1_score | accuracy |
 |---|---|---|
-| Bước 2 (chỉ `train_batch1`) | ___ | ___ |
-| Bước 3 (thêm `train_batch2`) | ___ | ___ |
+| Bước 2 (chỉ `train_batch1`) | 0.7149 | 0.8740 |
+| Bước 3 (thêm `train_batch2`) | 0.7354 | 0.8820 |
 
-**Nhận xét:** ___
+**Nhận xét:** Gấp đôi dữ liệu huấn luyện (22.361 lên 44.722 mẫu) làm f1_score tăng 0,0205 và
+accuracy tăng 0,008. Trên 124 người thu nhập cao của holdout, mô hình nhận đúng thêm 3 người
+(79 lên 82). Mức tăng này nhỏ và có thể nằm trong dao động ngẫu nhiên của tập holdout 500 mẫu,
+vì `train_batch2` cùng phân phối với dữ liệu cũ nên không mang nhiều thông tin mới. Điều được
+kiểm chứng ở Bước 3 là commit dữ liệu tự kích hoạt toàn bộ pipeline đến khi model mới được
+phục vụ trên EC2 mà không cần thao tác thủ công.
 
 ---
 
