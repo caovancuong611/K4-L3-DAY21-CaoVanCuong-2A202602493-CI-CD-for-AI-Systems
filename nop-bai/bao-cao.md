@@ -48,7 +48,7 @@ mất tác dụng chặn mô hình kém.
 
 | Khó khăn | Nguyên nhân | Cách giải quyết |
 |---|---|---|
-| Python mặc định trên máy là 3.14, không cài được các thư viện đã pin. | Các phiên bản trong `requirements.txt` chỉ hỗ trợ Python 3.10 - 3.12. | Tạo `.venv` bằng `py -3.12 -m venv .venv`. |
+| Job Train lỗi `Not authorized to perform sts:AssumeRoleWithWebIdentity`. | Claim `sub` của GitHub OIDC có thêm ID số (`repo:owner@id/repo@id:ref:...`) nên không khớp trust policy dạng cũ. | In claims bằng `core.getIDToken` trong workflow rồi sửa `sub` trong trust policy cho khớp. |
 | `import mlflow` báo lỗi `No module named 'pkg_resources'`. | pip kéo về setuptools 84, bản này đã bỏ `pkg_resources` mà MLflow 2.13 cần. | Pin `setuptools<81` trong `requirements.txt`. |
 | EC2 khởi tạo với Ubuntu 26.04 (Python 3.14) nên không cài được `scikit-learn==1.4.2`. | Form Launch instance không giữ lựa chọn AMI 24.04. | Dùng `uv` cài Python 3.12 riêng cho venv của API, không phải tạo lại máy. |
 
